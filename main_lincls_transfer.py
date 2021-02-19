@@ -333,7 +333,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'state_dict': model.state_dict(),
                 'best_acc1': best_acc1,
                 'optimizer' : optimizer.state_dict(),
-            }, is_best, filename=saved_path+'checkpoint_{:04d}.pth.tar'.format(epoch))
+            }, is_best, filename=args.save_path+'checkpoint_{:04d}.pth.tar'.format(epoch))
             if epoch == args.start_epoch:
                 sanity_check(model.state_dict(), args.pretrained)
 
