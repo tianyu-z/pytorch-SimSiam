@@ -28,10 +28,8 @@ from setlogger import get_logger
 import moco.loader
 import moco.builder
 
-saved_path = os.path.join("logs/R50e100_bs512lr0.1/")#rs56_KDCL_MinLogit_cifar_e250 rs56_5KD_0.4w_cifar_e250
-if not os.path.exists(saved_path):
-    os.makedirs(saved_path)
-logger = get_logger(os.path.join(saved_path, 'train.log'))
+# saved_path = os.path.join("logs/R50e100_bs512lr0.1/")#rs56_KDCL_MinLogit_cifar_e250 rs56_5KD_0.4w_cifar_e250
+
 
 model_names = sorted(name for name in models.__dict__
     if name.islower() and not name.startswith("__")
@@ -69,6 +67,8 @@ parser.add_argument('-p', '--print-freq', default=10, type=int,
                     metavar='N', help='print frequency (default: 10)')
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
+parser.add_argument('--save_path', default='test', type=str, metavar='PATH',
+                    help='path to save')
 parser.add_argument('--world-size', default=-1, type=int,
                     help='number of nodes for distributed training')
 parser.add_argument('--rank', default=-1, type=int,
@@ -105,9 +105,13 @@ parser.add_argument('--aug-plus', action='store_true',
 parser.add_argument('--cos', action='store_true',
                     help='use cosine lr schedule')
 
+args = parser.parse_args()
+
+if not os.path.exists(args.save_path):
+    os.makedirs(args.save_path)
+logger = get_logger(os.path.join(args.save_path, 'train.log'))
 
 def main():
-    args = parser.parse_args()
 
     if args.seed is not None:
         random.seed(args.seed)
@@ -282,7 +286,7 @@ def main_worker(gpu, ngpus_per_node, args):
                 'arch': args.arch,
                 'state_dict': model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
-            }, is_best=False, filename=saved_path+'checkpoint_{:04d}.pth.tar'.format(epoch))
+            }, is_best=False, filename=args.save_path+'checkpoint_{:04d}.pth.tar'.format(epoch))
 
 
 def train(train_loader, model, optimizer, epoch, args):
