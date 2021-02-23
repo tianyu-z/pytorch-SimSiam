@@ -94,6 +94,8 @@ parser.add_argument('--cos', action='store_true',
                     help='use cosine lr schedule')
 parser.add_argument('--save_path', default='test', type=str, metavar='PATH',
                     help='path to save')
+parser.add_argument('--num_class', default=1000, type=int, metavar='N',
+                    help='number of classes')
 
 best_acc1 = 0
 
@@ -163,7 +165,7 @@ def main_worker(gpu, ngpus_per_node, args):
     # create model
     print("=> creating model '{}'".format(args.arch))
     # model = models.__dict__[args.arch]()
-    model = resnet50()
+    model = resnet50(num_class=args.num_class)
     # freeze all layers but the last fc
     for name, param in model.named_parameters():
         if name not in ['fc.weight', 'fc.bias']:

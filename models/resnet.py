@@ -181,9 +181,9 @@ class ResNet(nn.Module):
         return x
 
 
-def resnet50():
-    return ResNet('imagenet', depth=50, num_classes=1000, bottleneck=True)
+def resnet50(num_class=1000):
+    return ResNet('imagenet', depth=50, num_classes=num_class, bottleneck=True)
 
 
-def resnet18():
-    return ResNet('imagenet', depth=18, num_classes=1000, bottleneck=False)
+def resnet18(num_class=1000):
+    return ResNet('imagenet', depth=18, num_classes=num_class, bottleneck=False)
