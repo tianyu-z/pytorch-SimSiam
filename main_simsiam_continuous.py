@@ -324,7 +324,7 @@ def train(train_loader, model, optimizer, epoch, args):
         z1, p1 = model(images[0])
         z2, p2 = model(images[1])
         # loss = negcos(p1, z2) / 2 + negcos(p2, z1) / 2
-        loss = torch.abs(score + negcos(p1, z2) / 2 + negcos(p2, z1) / 2)
+        loss = (score - nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. - nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.).abs().mean()
 
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
