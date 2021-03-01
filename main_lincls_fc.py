@@ -171,8 +171,9 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # freeze all layers but the last fc
     for name, param in model.named_parameters():
+        if 'linear_classifier' not in name:
         # if name not in ['fc.weight', 'fc.bias']:
-        param.requires_grad = False
+            param.requires_grad = False
     # init the fc layer
     # model.fc.weight.data.normal_(mean=0.0, std=0.01)
     # model.fc.bias.data.zero_()
