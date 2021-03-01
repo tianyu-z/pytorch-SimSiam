@@ -188,13 +188,13 @@ def main_worker(gpu, ngpus_per_node, args):
 
             # rename moco pre-trained keys
             state_dict = checkpoint['state_dict']
-            # for k in list(state_dict.keys()):
-            #     # retain only encoder_q up to before the embedding layer
-            #     if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
-            #         # remove prefix
-            #         state_dict[k[len("module.encoder_q."):]] = state_dict[k]
-            #     # delete renamed or unused k
-            #     del state_dict[k]
+            for k in list(state_dict.keys()):
+                # retain only encoder_q up to before the embedding layer
+                if k.startswith('module'):# and not k.startswith('module.encoder_q.fc'):
+                    # remove prefix
+                    state_dict[k[len("module"):]] = state_dict[k]
+                # delete renamed or unused k
+                del state_dict[k]
             # rename pretrained keys and delete mlp layers
             # for k in list(state_dict.keys()):
             #     if 'features' in k and 'fc' not in k:
@@ -207,6 +207,7 @@ def main_worker(gpu, ngpus_per_node, args):
             #     del state_dict[k_state]
             # args.start_epoch = 0
             msg = model.load_state_dict(state_dict, strict=False)
+            print()
             # assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
 
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
@@ -458,7 +459,8 @@ def sanity_check(state_dict, pretrained_weights):
     state_dict_pre = checkpoint['state_dict']
     for k, k_pre in zip(list(state_dict.keys()), list(state_dict_pre.keys())):
         # only ignore fc layer
-        if 'fc.weight' in k or 'fc.bias' in k:
+        if 'linear_classifier' not in k:
+        # if 'fc.weight' in k or 'fc.bias' in k:
             continue
 
         # name in pretrained model
