@@ -97,7 +97,7 @@ class SimSiam(nn.Module):
 class SimSiam_fc(nn.Module):
 
     def __init__(self, backbone='resnet50', d=2048, num_classes=1000):
-        super(SimSiam, self).__init__()
+        super(SimSiam_fc, self).__init__()
 
         if backbone == 'resnet50':
             net = resnet50()
