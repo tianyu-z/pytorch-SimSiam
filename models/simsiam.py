@@ -93,3 +93,51 @@ class SimSiam(nn.Module):
                 m.weight.data.uniform_(-stdv, stdv)
                 if m.bias is not None:
                     m.bias.data.uniform_(-stdv, stdv)
+
+class SimSiam_fc(nn.Module):
+
+    def __init__(self, backbone='resnet50', d=2048, num_classes=1000):
+        super(SimSiam, self).__init__()
+
+        if backbone == 'resnet50':
+            net = resnet50()
+        else:
+            raise NotImplementedError('Backbone model not implemented.')
+
+        num_ftrs = net.fc.in_features
+        self.features = nn.Sequential(*list(net.children())[:-1])
+        # num_ftrs = net.fc.out_features
+        # self.features = net
+
+        # projection MLP
+        self.projection = ProjectionMLP(num_ftrs, 2048, 2048)
+        # prediction MLP
+        self.prediction = PredictionMLP(2048, 512, 2048)
+
+        self.linear_classifier = nn.Linear(2048, num_classes, bias=True)
+
+        self.reset_parameters()
+
+    def forward(self, x):
+        x = self.features(x)
+        x = x.view(x.size(0), -1)
+        # projection
+        z = self.projection(x)
+        # prediction
+        p = self.prediction(z)
+        return self.linear_classifier(z)
+
+    def reset_parameters(self):
+        # reset conv initialization to default uniform initialization
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                n = m.kernel_size[0] * m.kernel_size[1] * m.in_channels
+                stdv = 1. / math.sqrt(n)
+                m.weight.data.uniform_(-stdv, stdv)
+                if m.bias is not None:
+                    m.bias.data.uniform_(-stdv, stdv)
+            elif isinstance(m, nn.Linear):
+                stdv = 1. / math.sqrt(m.weight.size(1))
+                m.weight.data.uniform_(-stdv, stdv)
+                if m.bias is not None:
+                    m.bias.data.uniform_(-stdv, stdv)

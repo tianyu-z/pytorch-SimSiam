@@ -24,7 +24,7 @@ from setlogger import get_logger
 from nvlars import LARC
 import math
 from models.resnet import resnet50
-from models.simsiam import SimSiam
+from models.simsiam import SimSiam_fc
 
 # python main_lincls.py -a resnet50 --lr 1.6 --cos --epochs 90 --batch-size 4096 -p 100 --pretrained logs/R50e100_bs512lr0.1/checkpoint_0099.pth.tar --dist-url 'tcp://localhost:10001' --multiprocessing-distributed --world-size 1 --rank 0 /data/ImageNet/CLS-LOC/
 
@@ -167,8 +167,8 @@ def main_worker(gpu, ngpus_per_node, args):
     print("=> creating model '{}'".format(args.arch))
     # model = models.__dict__[args.arch]()
     # model = resnet50(num_class=args.num_class)
-    model = SimSiam()
-    linear_classifier = nn.Linear(2048, args.num_class, bias=True)
+    model = SimSiam_fc(num_classes=args.num_class)
+
     # freeze all layers but the last fc
     for name, param in model.named_parameters():
         # if name not in ['fc.weight', 'fc.bias']:
@@ -176,8 +176,8 @@ def main_worker(gpu, ngpus_per_node, args):
     # init the fc layer
     # model.fc.weight.data.normal_(mean=0.0, std=0.01)
     # model.fc.bias.data.zero_()
-    linear_classifier.weight.data.normal_(mean=0.0, std=0.01)
-    linear_classifier.bias.data.zero_()
+    model.linear_classifier.weight.data.normal_(mean=0.0, std=0.01)
+    model.linear_classifier.bias.data.zero_()
 
     # load from pre-trained, before DistributedDataParallel constructor
     if args.pretrained:
@@ -211,7 +211,6 @@ def main_worker(gpu, ngpus_per_node, args):
             print("=> loaded pre-trained model '{}'".format(args.pretrained))
         else:
             print("=> no checkpoint found at '{}'".format(args.pretrained))
-    model = nn.Sequential([linear_classifier, model])
 
     if args.distributed:
         # For multiprocessing distributed, DistributedDataParallel constructor
