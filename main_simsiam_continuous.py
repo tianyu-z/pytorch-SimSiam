@@ -298,11 +298,13 @@ def train(train_loader, model, optimizer, epoch, args):
     batch_time = AverageMeter('Time', ':6.3f')
     data_time = AverageMeter('Data', ':6.3f')
     losses = AverageMeter('Loss', ':.4e')
+    losses_1 = AverageMeter('Loss', ':.4e')
+    losses_2 = AverageMeter('Loss', ':.4e')
     # top1 = AverageMeter('Acc@1', ':6.2f')
     # top5 = AverageMeter('Acc@5', ':6.2f')
     progress = ProgressMeter(
         len(train_loader),
-        [batch_time, data_time, losses],
+        [batch_time, data_time, losses, losses_1, losses_2],
         prefix="Epoch: [{}]".format(epoch))
 
     # switch to train mode
@@ -324,12 +326,22 @@ def train(train_loader, model, optimizer, epoch, args):
         z1, p1 = model(images[0])
         z2, p2 = model(images[1])
         # loss = negcos(p1, z2) / 2 + negcos(p2, z1) / 2
-        loss = (score - nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. - nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.).abs().mean()
-
+        similarity = nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. + nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.
+        # loss = (score - nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. - nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.).abs().mean()
+        loss_sim = 1. - similarity.mean()
+        loss_aug = (similarity/similarity.detach().mean() - score/score.mean()).abs().mean() * 0.2
+        # print(score, score.mean())
+        # if similarity.mean() > 0.8:
+        if epoch > 10:
+            loss = loss_sim + loss_aug
+        else:
+            loss = loss_sim
         # acc1/acc5 are (K+1)-way contrast classifier accuracy
         # measure accuracy and record loss
         # acc1, acc5 = accuracy(output, target, topk=(1, 5))
         losses.update(loss.item(), images[0].size(0))
+        losses_1.update(loss_sim.item(), images[0].size(0))
+        losses_2.update(loss_aug.item(), images[0].size(0))
         # top1.update(acc1[0], images[0].size(0))
         # top5.update(acc5[0], images[0].size(0))
 

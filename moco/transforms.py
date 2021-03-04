@@ -12,6 +12,7 @@ import numbers
 import types
 from collections.abc import Sequence, Iterable
 import warnings
+from PIL import ImageFilter
 
 from torchvision.transforms import functional as F
 
@@ -261,6 +262,16 @@ class RandomGrayscale(object):
     def __repr__(self):
         return self.__class__.__name__ + '(p={0})'.format(self.p)
 
+class GaussianBlur(object):
+    """Gaussian blur augmentation in SimCLR https://arxiv.org/abs/2002.05709"""
+
+    def __init__(self, sigma=[.1, 2.]):
+        self.sigma = sigma
+
+    def __call__(self, x):
+        sigma = random.uniform(self.sigma[0], self.sigma[1])
+        x = x.filter(ImageFilter.GaussianBlur(radius=sigma))
+        return x, sigma
 
 class RandomHomography(object):
     """Randomly convert image to grayscale with a probability of p (default 0.1).
@@ -292,3 +303,4 @@ class RandomHomography(object):
 
     def __repr__(self):
         return self.__class__.__name__ + '(scale={0})'.format(self.scale)
+

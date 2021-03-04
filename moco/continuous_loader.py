@@ -1,7 +1,7 @@
 from PIL import Image
 from torchvision import transforms
-from moco.transforms import RandomResizedCrop, RandomGrayscale, ColorJitter
-from moco.loader import GaussianBlur
+from moco.transforms import RandomResizedCrop, RandomGrayscale, ColorJitter, GaussianBlur
+# from moco.loader import GaussianBlur
 import random
 import numpy as np
 
@@ -41,7 +41,15 @@ class TwoTransformPara:
 
     def score(self, para_q, para_k):
         # return IOU(para_k['crop'], para_q['crop']) # IOU
-        return 1.- np.mean(np.abs((np.array(para_q['color'])-np.array(para_k['color']))))/(0.8) * 0.2 - 0.1 * np.abs(para_q['gray'] - para_k['gray'])
+        score = np.ones(4)
+        rate = 0.2
+        score[0] = IOU(para_k['crop'], para_q['crop']) * rate + (1. - rate)
+        score[1] = np.mean(np.abs((np.array(para_q['color'])-np.array(para_k['color']))))/(0.8) * rate + (1. - rate)
+        score[2] = np.abs(para_q['gray'] - para_k['gray']) * rate + (1. - rate)
+        score[3] = (para_k['blur'] + para_q['blur'])/2. / 2. * rate + (1. - rate)
+        # print(score, np.mean(score))
+        # raise Exception
+        return np.mean(score)
 
 
 class AugmentationSet(object):
@@ -57,7 +65,9 @@ class AugmentationSet(object):
             para['color'] = [1.,1.,1.,1.]
         img, para['gray'] = RandomGrayscale(p=0.2)(img)
         if 0.5 > random.random():
-            img = GaussianBlur([.1, 2.])(img)
+            img, para['blur'] = GaussianBlur([.1, 2.])(img)
+        else:
+            para['blur'] = 0.
 
         img = transforms.RandomHorizontalFlip()(img)
         image = img.copy()
