@@ -44,13 +44,30 @@ class TwoTransformPara:
         score = np.ones(4)
         rate = 0.2
         score[0] = IOU(para_k['crop'], para_q['crop']) * rate + (1. - rate)
-        score[1] = np.mean(np.abs((np.array(para_q['color'])-np.array(para_k['color']))))/(0.8) * rate + (1. - rate)
+        score[1] = np.mean(np.abs(para_q['color'] - para_k['color'])/np.array([0.4, 0.4, 0.4, 0.1]))/2. * rate + (1. - rate)
         score[2] = np.abs(para_q['gray'] - para_k['gray']) * rate + (1. - rate)
-        score[3] = (para_k['blur'] + para_q['blur'])/2. / 2. * rate + (1. - rate)
-        # print(score, np.mean(score))
+        score[3] = np.abs(para_k['blur'] - para_q['blur'])/2. * rate + (1. - rate)
+        # print(score, np.mean(score), np.abs(para_q['color'] - para_k['color']))
         # raise Exception
         return np.mean(score)
 
+    # def geometric_score(self, para_q, para_k):
+    #     score = np.ones(4)
+    #     rate = 0.2
+    #     score[0] = IOU(para_k['crop'], para_q['crop']) * rate + (1. - rate)
+    #     score[1] = self.geometric_discrepancy(para_q['color'], para_k['color'], np.array([0.4, 0.4, 0.4, 0.1])) * rate + (1. - rate)
+    #     score[2] = np.abs(para_q['gray'] - para_k['gray']) * rate + (1. - rate)
+    #     score[3] = np.abs(para_k['blur'] - para_q['blur'])/2. * rate + (1. - rate)
+    #     # print(score, np.mean(score))
+    #     # raise Exception
+    #     return self.geometric_mean(score)
+    #
+    # def geometric_mean(self, score):
+    #     return np.exp(np.mean(np.log(score)))
+    #
+    # def geometric_discrepancy(self, para_q, para_k, max_d):
+    #     ratio = np.maximum(para_q, para_k)
+    #     return 0
 
 class AugmentationSet(object):
     def __init__(self, debug = False):
@@ -62,7 +79,8 @@ class AugmentationSet(object):
         if 0.8 > random.random():
             img, para['color'] = ColorJitter(0.4, 0.4, 0.4, 0.1)(img)
         else:
-            para['color'] = [1.,1.,1.,1.]
+            para['color'] = [1.,1.,1.,0.]
+        para['color'] = np.array(para['color'])
         img, para['gray'] = RandomGrayscale(p=0.2)(img)
         if 0.5 > random.random():
             img, para['blur'] = GaussianBlur([.1, 2.])(img)
