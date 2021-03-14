@@ -44,9 +44,10 @@ class TwoTransformPara:
         score = np.ones(4)
         rate = 0.2
         score[0] = IOU(para_k['crop'], para_q['crop']) * rate + (1. - rate)
-        score[1] = np.mean(np.abs(para_q['color'] - para_k['color'])/np.array([0.4, 0.4, 0.4, 0.1]))/2. * rate + (1. - rate)
-        score[2] = np.abs(para_q['gray'] - para_k['gray']) * rate + (1. - rate)
-        score[3] = np.abs(para_k['blur'] - para_q['blur'])/2. * rate + (1. - rate)
+        score[1] = (1. - np.mean(
+            np.abs(para_q['color'] - para_k['color']) / np.array([0.4, 0.4, 0.4, 0.1])) / 2.) * rate + (1. - rate)
+        score[2] = (1. - np.abs(para_q['gray'] - para_k['gray'])) * rate + (1. - rate)
+        score[3] = (1. - np.abs(para_k['blur'] - para_q['blur']) / 2.) * rate + (1. - rate)
         # print(score, np.mean(score), np.abs(para_q['color'] - para_k['color']))
         # raise Exception
         return np.mean(score)

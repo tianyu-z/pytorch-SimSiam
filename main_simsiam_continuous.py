@@ -327,10 +327,10 @@ def train(train_loader, model, optimizer, epoch, args):
         z2, p2 = model(images[1])
         # loss = negcos(p1, z2) / 2 + negcos(p2, z1) / 2
         similarity = nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. + nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.
-        similarity_z = nn.functional.cosine_similarity(z1, z2, dim=-1)
+        similarity_z = nn.functional.cosine_similarity(p1, p2, dim=-1)
         # loss = (score - nn.functional.cosine_similarity(p1, z2.detach(), dim=-1) / 2. - nn.functional.cosine_similarity(p2, z1.detach(), dim=-1) / 2.).abs().mean()
         loss_sim = 1. - similarity.mean()
-        loss_aug = (similarity_z/similarity_z.detach().mean() - score/score.mean()).square().mean() * 1.0
+        loss_aug = (similarity_z/similarity_z.detach().mean() - score/score.mean()).square().mean() * 10.0
         # print(score, score.mean())
         # if similarity.mean() > 0.8:
         if epoch >= 10:
